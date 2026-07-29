@@ -1,0 +1,17 @@
+{
+  "name": "scheduling-app",
+  "version": "1.0.0",
+  "description": "Weekly availability tracker for sharing with a manager",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "set-passcode": "node server/set-passcode.js"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

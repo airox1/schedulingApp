@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aidan's Availability</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1 id="display-name">Aidan's Availability</h1>
+      <div class="header-actions">
+        <div class="theme-toggle theme-toggle-header" role="group" aria-label="Theme">
+          <button type="button" class="theme-segment theme-light-btn" aria-pressed="true" title="Light mode" aria-label="Light mode">&#9728;&#65039;</button>
+          <button type="button" class="theme-segment theme-dark-btn" aria-pressed="false" title="Dark mode" aria-label="Dark mode">&#127769;</button>
+        </div>
+        <button id="edit-toggle-btn" class="btn btn-outline">Edit Availability</button>
+      </div>
+    </header>
+
+    <nav class="week-nav">
+      <div class="week-label" id="week-label">Loading&hellip;</div>
+      <button id="prev-week-btn" class="btn btn-ghost" aria-label="Previous week">&larr; Prev</button>
+      <button id="today-btn" class="btn btn-ghost btn-small">This week</button>
+      <button id="next-week-btn" class="btn btn-ghost" aria-label="Next week">Next &rarr;</button>
+      <div class="nav-break" aria-hidden="true"></div>
+    </nav>
+
+    <div id="week-summary" class="week-summary"></div>
+
+    <div id="editing-banner" class="editing-banner collapsed">
+      Editing &mdash; click a day to toggle between Available and Unavailable. Changes save automatically.
+      <button id="done-editing-btn" class="btn btn-outline btn-small">Done</button>
+    </div>
+
+    <main id="week-grid" class="week-grid" aria-live="polite"></main>
+
+    <p class="hint">Having issues? <button type="button" id="bug-report-btn" class="text-btn">Report a bug</button> to Aidan!</p>
+
+    <div class="theme-toggle theme-toggle-bottom" role="group" aria-label="Theme">
+      <button type="button" class="theme-segment theme-light-btn" aria-pressed="true" title="Light mode" aria-label="Light mode">&#9728;&#65039;</button>
+      <button type="button" class="theme-segment theme-dark-btn" aria-pressed="false" title="Dark mode" aria-label="Dark mode">&#127769;</button>
+    </div>
+  </div>
+
+  <div id="passcode-modal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Enter passcode to edit</h2>
+      <form id="passcode-form">
+        <input id="passcode-input" type="password" autocomplete="current-password" placeholder="Passcode" required />
+        <p id="passcode-error" class="error-text" hidden></p>
+        <div class="modal-actions">
+          <button type="button" id="passcode-cancel-btn" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-primary">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="note-modal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
+      <div class="modal-header">
+        <h2 id="note-modal-title">Note</h2>
+        <button type="button" id="note-close-btn" class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div id="note-display" class="note-display" hidden></div>
+      <textarea id="note-input" class="day-note" placeholder="Add a note (optional)" maxlength="200" hidden></textarea>
+      <div class="modal-actions" id="note-modal-actions" hidden>
+        <button type="button" id="note-save-btn" class="btn btn-primary btn-small">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bug-modal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bug-modal-title">
+      <div class="modal-header">
+        <h2 id="bug-modal-title">Report a Bug</h2>
+        <button type="button" id="bug-close-btn" class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <textarea id="bug-input" class="day-note" placeholder="Describe the issue you're experiencing..." maxlength="500"></textarea>
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" id="bug-cancel-btn" class="btn btn-ghost btn-small">Cancel</button>
+        <button type="button" id="bug-submit-btn" class="btn btn-primary btn-small">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
