@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
-const { getWeek, saveWeek, DAY_NAMES, STATUSES } = require('./db');
+const { initDb, getWeek, saveWeek, DAY_NAMES, STATUSES } = require('./db');
 const { issueToken, requireEditToken, verifyPasscode } = require('./auth');
 
 const app = express();
@@ -66,15 +66,15 @@ app.post('/api/login', (req, res) => {
   res.json({ token: issueToken() });
 });
 
-app.get('/api/week', (req, res) => {
+app.get('/api/week', async (req, res) => {
   const { start } = req.query;
   if (typeof start !== 'string' || !DATE_RE.test(start)) {
     return res.status(400).json({ error: 'Invalid or missing "start" date (expected YYYY-MM-DD).' });
   }
-  res.json(getWeek(start));
+  res.json(await getWeek(start));
 });
 
-app.post('/api/week', requireEditToken, (req, res) => {
+app.post('/api/week', requireEditToken, async (req, res) => {
   const { weekStart, days } = req.body || {};
   if (typeof weekStart !== 'string' || !DATE_RE.test(weekStart)) {
     return res.status(400).json({ error: 'Invalid or missing "weekStart" date (expected YYYY-MM-DD).' });
@@ -97,7 +97,7 @@ app.post('/api/week', requireEditToken, (req, res) => {
     cleanDays.push({ date, dayName: DAY_NAMES[i], status: d.status, note });
   }
 
-  const saved = saveWeek(weekStart, cleanDays);
+  const saved = await saveWeek(weekStart, cleanDays);
   res.json(saved);
 });
 
@@ -140,6 +140,8 @@ app.post('/api/bug-report', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Availability app running at http://localhost:${PORT}`);
+initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Availability app running at http://localhost:${PORT}`);
+  });
 });

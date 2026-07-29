@@ -1,9 +1,32 @@
 const fs = require('fs');
 const path = require('path');
+const { MongoClient } = require('mongodb');
 
 const DATA_FILE = path.join(__dirname, '..', 'data.json');
 
-function readDb() {
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const STATUSES = ['unknown', 'available', 'unavailable'];
+
+let dbCollection = null;
+
+async function initDb() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.log('No MONGODB_URI provided. Falling back to local data.json storage.');
+    return;
+  }
+  try {
+    const client = new MongoClient(uri);
+    await client.connect();
+    const database = client.db('schedulingApp');
+    dbCollection = database.collection('weeks');
+    console.log('Connected to MongoDB Atlas!');
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err);
+  }
+}
+
+function readLocalDb() {
   if (!fs.existsSync(DATA_FILE)) return {};
   try {
     return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -12,12 +35,9 @@ function readDb() {
   }
 }
 
-function writeDb(data) {
+function writeLocalDb(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
-
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const STATUSES = ['unknown', 'available', 'unavailable'];
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00Z');
@@ -34,21 +54,38 @@ function defaultDays(weekStart) {
   }));
 }
 
-function getWeek(weekStart) {
-  const db = readDb();
-  if (!db[weekStart]) {
-    return { weekStart, days: defaultDays(weekStart) };
+async function getWeek(weekStart) {
+  if (dbCollection) {
+    const doc = await dbCollection.findOne({ weekStart });
+    if (!doc) {
+      return { weekStart, days: defaultDays(weekStart) };
+    }
+    return { weekStart, days: JSON.parse(doc.days_json) };
+  } else {
+    const db = readLocalDb();
+    if (!db[weekStart]) {
+      return { weekStart, days: defaultDays(weekStart) };
+    }
+    return { weekStart, days: JSON.parse(db[weekStart].days_json) };
   }
-  return { weekStart, days: JSON.parse(db[weekStart].days_json) };
 }
 
-function saveWeek(weekStart, days) {
+async function saveWeek(weekStart, days) {
   const daysJson = JSON.stringify(days);
   const now = new Date().toISOString();
-  const db = readDb();
-  db[weekStart] = { days_json: daysJson, updated_at: now };
-  writeDb(db);
+  
+  if (dbCollection) {
+    await dbCollection.updateOne(
+      { weekStart },
+      { $set: { days_json: daysJson, updated_at: now } },
+      { upsert: true }
+    );
+  } else {
+    const db = readLocalDb();
+    db[weekStart] = { days_json: daysJson, updated_at: now };
+    writeLocalDb(db);
+  }
   return { weekStart, days };
 }
 
-module.exports = { getWeek, saveWeek, defaultDays, DAY_NAMES, STATUSES };
+module.exports = { initDb, getWeek, saveWeek, defaultDays, DAY_NAMES, STATUSES };
