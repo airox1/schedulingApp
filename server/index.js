@@ -36,6 +36,21 @@ function isRateLimited(ip) {
   return entry.count > LOGIN_MAX_ATTEMPTS;
 }
 
+const bugReports = new Map();
+const BUG_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const BUG_MAX_ATTEMPTS = 3;
+
+function isBugRateLimited(ip) {
+  const now = Date.now();
+  const entry = bugReports.get(ip);
+  if (!entry || now > entry.resetAt) {
+    bugReports.set(ip, { count: 1, resetAt: now + BUG_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > BUG_MAX_ATTEMPTS;
+}
+
 app.get('/api/config', (req, res) => {
   res.json({ displayName: DISPLAY_NAME });
 });
@@ -87,6 +102,10 @@ app.post('/api/week', requireEditToken, (req, res) => {
 });
 
 app.post('/api/bug-report', async (req, res) => {
+  if (isBugRateLimited(req.ip)) {
+    return res.status(429).json({ error: 'Too many bug reports submitted. Please try again later.' });
+  }
+
   const { issue } = req.body;
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   
